@@ -8,30 +8,37 @@ class ProductController{
     }
 
     public function getProducts(){
-        $this->view->assign("products",$this->model->getProducts());
-        $this->view->assign("categories",$this->model->getAllCategory());
-        $this->view->display("./views/productsview.php");
+        // echo json_encode($this->model->getProducts());
+        // $this->view->assign("products",$this->model->getProducts());
+        // $this->view->assign("categories",$this->model->getAllCategory());
+        echo json_encode($this->model->getProducts());
+        echo json_encode($this->model->getAllCategory());
+        // $this->view->display("./views/productsview.php");
     }
 
     public function getProductById($id){
-        $this->view->assign("product",$this->model->getProductById($id));
-        $this->view->display("./views/productByIdview.php");
+        // $this->view->assign("product",$this->model->getProductById($id));
+        echo json_encode($this->model->getProductById($id));
+        // $this->view->display("./views/productByIdview.php");
     }
 
     public function showEditView($id){
-        $this->view->assign("product",$this->model->getProductById($id));
+        echo json_encode($this->model->getProductById($id));
+        // $this->view->assign("product",$this->model->getProductById($id));
         $this->view->display("./views/editView.php");
     }
 
     public function updateProduct(){
         $product=$this->getProductFromForm();
         $this->model->updateProduct($product);
-        header("Location: {$_SERVER['PHP_SELF']}");
+        echo json_encode(array("response"=>"Updated product".$_POST['id']));
+        // header("Location: {$_SERVER['PHP_SELF']}");
     }
 
     public function deleteProductById($id){
         $this->model->deleteProductById($id);
-        header("Location: {$_SERVER['PHP_SELF']}");
+        echo json_encode(array("response"=>"Deleted product".$_POST['id']));
+        // header("Location: {$_SERVER['PHP_SELF']}");
     }
 
     public function showAddView(){
@@ -41,7 +48,8 @@ class ProductController{
     public function addProduct(){
         $product=$this->getProductFromForm();
         $this->model->addProduct($product);
-        header("Location: {$_SERVER['PHP_SELF']}");
+        echo json_encode(array("response"=>"Added product".$_POST['name']));
+        // header("Location: {$_SERVER['PHP_SELF']}");
     }
 
     public function getProductFromForm(){

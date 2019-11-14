@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+    <head>
+        <title>My Product List</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="bootstrap.min.css">
+        <script src="jquery.min.js"></script>
+        <script src="bootstrap.min.js"></script>
+        
+        <script>
+            function getProductById(id){
+                $.getJSON("./index1.php?ProductController/getProductById/"+id,function(jsondata){
+                    showProductInForms(jsondata);
+                });
+            }
+
+            function showProductInForms(jsondata){
+                //get the text field from the Modal
+                let id=$("#id");
+                let name=$("#name");
+                let category=$("#category");
+                let description=$("#description");
+                let img=$("#img");
+                let price=$("#price");
+
+                // set text field from json
+                id.val(jsondata.id);
+                name.val(jsondata.name);
+                category.val(jsondata.category);
+                description.val(jsondata.description);
+                img.val(jsondata.img);
+                price.val(jsondata.price);
+
+                // show modal
+                $('#myUpdateDeleteModal').modal('show');
+            }
+
+            function getProducts(){
+                // get JSON from php using AJAX request
+                $.getJSON('./index1.php?ProductController/getProducts',function(jsondata){
+                    showProductInTables(jsondata);
+                });
+            }
+
+            function showProductInTables(jsondata){
+                let table=$("#tblProduct");
+                table.empty();
+                table.append("<thead>");
+                table.append("<th>"+"ID"+"</th>");
+                table.append("<th>"+"Name"+"</th>");
+                table.append("<th>"+"Description"+"</th>");
+                table.append("<th>"+"Category"+"</th>");
+                table.append("<th>"+"Price"+"</th>");
+                table.append("</thead>");
+                table.append("<tbody>");
+                $.each(jsondata,function(idx, product){
+                    table.append("<tr>");
+                    table.append("<td><a href='#' onclick=getProductById('" +product.id+ "')>"+product.id+"</a></td>");
+                    table.append("<td>"+product.name+"</td>");
+                    table.append("<td>"+product.description+"</td>");
+                    table.append("<td>"+product.category+"</td>");
+                    table.append("<td>"+product.price+"</td>");
+                    table.append("</tr>");
+                });
+                table.append("</tbody>");
+            }
+
+            function updateProduct(){
+                // assign values in the modal text fields to varibles
+                let newId=$("#myUpdateDeleteModal #id").val();
+                let newName=$("#myUpdateDeleteModal #name").val();
+                let newCategory=$("#myUpdateDeleteModal #category").val();
+                let newDescription=$("#myUpdateDeleteModal #description").val();
+                let newImg=$("#myUpdateDeleteModal #img").val();
+                let newPrice=$("#myUpdateDeleteModal #price").val();
+
+                // send JSON data to php using AJAX post method
+                let postData={id:newId,name:newName,description:newDescription,category:newCategory,img:NewImg,price:newPrice};
+                $.post('./index1.php?ProductController/updateProduct/',postData,function(jsondata){
+                    alert(jsondata);
+                    getProducts();
+                    $("#myUpdateDeleteModal").modal(hide);
+                });
+            }
+
+            function deleteProduct(){
+                let id=$("#myUpdateDeleteModal #id").val();
+                alert(id);
+                $.getJSON('./index1.php?ProductController/deleteProductById'+id,function(jsondata){
+                    alert(jsondata.response);
+                    getProducts();
+                    $("#myUpdateDeleteModal").modal(hide);
+                });
+            }
+
+            function addProduct(){
+                let name=$("#myAddModal #name").val();
+                let description=$("#myAddModal #description").val();
+                let category=$("#myAddModal #category").val();
+                let img=$("#myAddModal #img").val();
+                let price=$("#myAddModal #price").val();
+                let postData={name:name,description:description,category:category,img:img,price:price};
+                $.post('./index1.php?ProductController/addProduct/',postData,function(jsondata){
+                    alert(jsondata);
+                    getProducts();
+                    $('#myAddModal #name').val('');
+                    $('#myAddModal #description').val('');
+                    $('#myAddModal #category').val('');
+                    $('#myAddModal #img').val('');
+                    $('#myAddModal #price').val('');
+                    $("#myAddModal").modal(hide);
+                });
+            }
+
+            $(document).ready(function(){
+                getProducts();
+            });
+        
+        
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h2>JSON Products</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-10">
+                    <h3>Welcome to your very own shopping cart! :)</h3>
+                </div>
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myAddModal">Add Product</button>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 20px;">
+                <div class="col">
+                    <table id="tblProduct" class="table table-hover"></table>
+                </div>
+            </div>
+        </div>
+        <!--Modal addProduct-->
+        <div class="modal" id="myAddModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <!--modal header-->
+                    <div class="modal-header">
+                        <h4>Add a Product</h4>
+                        <button type="dismiss" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <!--modal body-->
+                    <div class="modal-body">
+                        Name:<input id="name" type="text" class="form-control" style="margin-bottom: 10px;">
+                        Category:<input id="category" type="text" class="form-control" style="margin-bottom: 10px;">
+                        Description:<textarea id="description" type="text" class="form-control" style="margin-bottom: 10px;"></textarea>
+                        Img:<input id="img" type="text" class="form-control" style="margin-bottom: 10px;">
+                        Price:<input id="price" type="text" class="form-control">
+                    </div>
+                    <!--modal footer-->
+                    <div class="modal-footer">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-success" onclick="addProduct">Add</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Modal Update or Delete-->
+        <div class="modal" id="myUpdateDeleteModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <!--modal header-->
+                        <div class="modal-header">
+                            <h4>Edit product</h4>
+                            <button type="dismiss" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <!--modal body-->
+                        <div class="modal-body">
+                            ProductID:<input id="id" type="text" class="form-control" style="margin-bottom: 10px;" readonly="true">
+                            Name:<input id="name" type="text" class="form-control" style="margin-bottom: 10px;">
+                            Category:<input id="category" type="text" class="form-control" style="margin-bottom: 10px;">
+                            Description:<textarea id="description" type="text" class="form-control" style="margin-bottom: 10px;"></textarea>
+                            Img:<input id="img" type="text" class="form-control" style="margin-bottom: 10px;">
+                            Price:<input id="price" type="text" class="form-control">
+                        </div>
+                        <!--modal footer-->
+                        <div class="modal-footer">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success" onclick="updateProduct">Update</button>
+                                <button type="button" class="btn btn-danger" onclick="deleteProduct">Delete</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            </div>    
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </body>
+</html>

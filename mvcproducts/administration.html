@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Bootstrap Example</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	<script>
+		function getProductById(id) {
+			//get JSON from php using AJAX request ($.getJSON() method is used to get JSON data using an AJAX HTTP GET request)
+			$.getJSON("./index1.php?ProductControllerJSON/getProductById/" + id, function (data) {
+				//to be able to update you should first populate the form with the product's data based on the product id
+				showProductInForm(data);
+			});//end getjson  		
+		}
+
+		function showProductInForm(data) {
+			//get the texfields from modal;
+			let myId = $("#txtId");
+			let myName = $("#txtName");
+			let myDescription = $("#txtDescription");
+			let myCategory = $("#txtCategory");
+			let myImage = $("#txtImage");
+			let myPrice = $("#txtPrice");
+			//set textfield data from json
+			myId.val(data.id);
+			myName.val(data.name);
+			myDescription.val(data.description);
+			myCategory.val(data.category);
+			myImage.val(data.image);
+			myPrice.val(data.price);
+
+			//show modal 
+			$('#myUpdateDeleteModal').modal('show');
+
+		}
+
+		function getProducts() {
+			//get JSON from php using AJAX
+			$.getJSON("./index1.php?ProductControllerJSON/getProducts", function (data) {
+				//you got the data, now you need somewhere to store and show it
+				showProductsInTable(data);
+			}); 		    		
+		}
+
+		function updateProduct() {
+			//assign values in modal text fields to variables
+			let myId = $("#myUpdateDeleteModal #txtId").val();//get value from textfield
+			let myName = $("#myUpdateDeleteModal #txtName").val();
+			let myDescription = $("#myUpdateDeleteModal #txtDescription").val();
+			let myCategory = $("#myUpdateDeleteModal #txtCategory").val();
+			let myImage = $("#myUpdateDeleteModal #txtImage").val();
+			let myPrice = $("#myUpdateDeleteModal #txtPrice").val();
+			//send JSON to php using AJAX post request ($.post method loads data from server using an AJAX HTTP POST request)
+			let postData = { id: myId, name: myName, description: myDescription, category: myCategory, image: myImage, price: myPrice };
+			$.post("./index1.php?ProductControllerJSON/updateProduct", postData, function (data) {
+				alert(data);
+				getProducts();
+				getAllCategories();
+				$('#myUpdateDeleteModal').modal('hide');
+			});
+		}
+
+		function deleteProduct() {
+			let myId = $("#myUpdateDeleteModal #txtId").val();//get value from textfield
+			alert(myId);
+			$.getJSON("./index1.php?ProductControllerJSON/deleteProductById/" + myId, function (data) {
+				alert(data.response);
+				getProducts();
+				getAllCategories();
+				$('#myUpdateDeleteModal').modal('hide');
+			});
+
+		}
+
+		function addProduct() {
+			//assign values in modal text fields to variables
+			let myName = $("#myAddModal #txtName").val();//get value from textfield
+			let myDescription = $("#myAddModal #txtDescription").val();
+			let myCategory = $("#myAddModal #txtCategory").val();
+			let myImage = $("#myAddModal #txtImage").val();
+			let myPrice = $("#myAddModal #txtPrice").val();
+			//send JSON to php using AJAX
+			let postData = { name: myName, description: myDescription, category: myCategory, image: myImage, price: myPrice };
+			
+			$.post("./index1.php?ProductControllerJSON/addProduct", postData, function (data) {
+				alert(data);
+				getProducts();
+				getAllCategories();
+				$("#myAddModal #txtName").val('');//empty fields
+				$("#myAddModal #txtCategory").val('');
+				$("#myAddModal #txtDescription").val('');
+				$("#myAddModal #txtImage").val('');
+				$("#myAddModal #txtPrice").val('');
+				$('#myAddModal').modal('hide');
+			});
+		}//end update car
+
+		function showProductsInTable(data) {
+			let table = $("#tblProduct");
+			table.empty();
+			table.append("<thead>");
+			table.append("<th>" + "ID" + "</th>");
+			table.append("<th>" + "Name" + "</th>");
+			table.append("<th>" + "Category" + "</th>");
+			table.append("<th>" + "Description" + "</th>");
+			table.append("<th>" + "Price" + "</th>");
+			table.append("</thead>");
+			$.each(data, function (idx, product) {
+
+				table.append("<tr>");
+				table.append("<td><a href='#'  onclick=getProductById('" + product.id + "')>" + product.id + "</a></td>");
+				table.append("<td>" + product.name + "</td>");
+				table.append("<td>" + product.category + "</td>");
+				table.append("<td>" + product.description + "</td>");
+				table.append("<td>" + product.price + "</td>");
+				table.append("</tr>");
+			});//end each
+		}
+
+		function getAllCategories(){
+			$.getJSON("./index1.php?ProductControllerJSON/getAllCategories", function (data){
+				showCategoriesInSelect(data);
+			});
+		}
+
+		function showCategoriesInSelect(data){
+			let select = $("#category");
+			select.append("<option value='a'>-select-</option>");
+			$.each(data, function (idx, category){
+				select.append("<option value='"+ category.category +"'>"+ category.category +"</option>");
+			});
+			select.append("<option value='all'>-All Products-</option>");
+		}
+
+		function showProductsByCategory(){
+			let category = $("#category").val();
+			if(category=='all'){
+				getProducts();
+			}else{
+				$.getJSON("./index1.php?ProductControllerJSON/getProductsByCategory/"+category, function (data){
+					showProductsInTable(data);
+				});
+			}
+		}
+
+		$(document).ready(function () {
+			getProducts();
+			getAllCategories();
+		});//end document ready
+
+	</script>
+</head>
+
+<body>
+
+	<div class="container">
+		<div class="row">
+			<h3 class="text-info">Welcome to the administration page :)</h3>
+		</div>
+		<div class="row">
+			<div class="col-sm-10">
+				<h3>Manage Your Products</h3>
+			</div>
+			<div class="col-sm-2">
+				<button class="btn btn-info" type="button" data-toggle="modal" data-target="#myAddModal">Add
+					Product</button>
+			</div>
+		</div>
+		<div class="row"style="margin-top: 25px;">
+    	<div style="float:left; padding-right:15px;">
+			<select id='category' class="form-control">
+			</select>
+		</div>
+        <div style="float:left">
+			<button onclick="showProductsByCategory()" class="btn btn-secondary"> Search</button>
+		</div>
+		</div>
+		<div class="row" style="margin-top: 25px;">
+			<div class="col">
+				<table class="table table-hover" id="tblProduct"></table>
+			</div>
+		</div>
+		<div class="col">
+            <button class="btn btn-light btn-bg" style="margin-left:920px"><a href="./menu.html">Go to the store</a></button>
+		</div>
+	</div>
+	<!-- The Modal for update delete -->
+	<div class="modal" id="myUpdateDeleteModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Edit Products</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+
+				<!-- Modal body -->
+				<div class="modal-body">
+					Id:<input type="text" id="txtId" class="form-control" readonly="true">
+					Name:<input type="text" id="txtName" class="form-control">
+					Category:<input type="text" id="txtCategory" class="form-control">
+					Description:<textarea id="txtDescription" class="form-control"></textarea>
+					Image:<input type="text" id="txtImage" class="form-control">
+					Price:<input type="text" id="txtPrice" class="form-control">
+				</div>
+
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					<div class="btn-group">
+						<button onclick="updateProduct()" class="btn btn-primary">Update</button>
+						<button onclick="deleteProduct()" class="btn btn-danger">Delete</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--end modal-->
+	<!-- The Modal for add -->
+	<div class="modal" id="myAddModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Add new products to your list</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+				<!-- Modal body -->
+				<form action='' method="POST" class="needs-validated" novalidate>
+				<div class="modal-body">
+					<div class="form-group">
+						Name:<input type="text" id="txtName" class="form-control" required>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please fill out this field</div>
+					</div>
+					<div class="form-group">
+						Category:<input type="text" id="txtCategory" class="form-control" required>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please fill out this field</div>
+					</div>
+					<div class="form-group">
+						Description:<textarea id="txtDescription" class="form-control" required></textarea>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please fill out this field</div>
+					</div>
+					<div class="form-group">
+						Image:<input type="text" id="txtImage" class="form-control" required>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please fill out this field</div>
+					</div>
+					<div class="form-group">
+						Price:<input type="number" id="txtPrice" class="form-control" required>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please enter the numbers</div>
+					</div>
+				</div>
+
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					<div class="btn-group">
+						<button id="btAdd" type="submit" class="btn btn-success" onclick="addProduct()">Add</button>
+						<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+				</form>
+
+			</div>
+		</div>
+	</div>
+	<!--end modal-->
+	
+	<script>
+	// Disable form submissions if there are invalid fields
+	(function() {
+	  'use strict';
+	  window.addEventListener('load', function() {
+    	// Get the forms we want to add validation styles to
+    	var forms = document.getElementsByClassName('needs-validation');
+    	// Loop over them and prevent submission
+    	var validation = Array.prototype.filter.call(forms, function(form) {
+      	form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+})();
+</script>
+</body>
+
+</html>
