@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Bootstrap Practice</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="bootstrap.min.css">
+    <script src="jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+	<script src="bootstrap.min.js"></script>
+	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	<script>
+		function getProductById(id) {
+			//get JSON from php using AJAX request ($.getJSON() method is used to get JSON data using an AJAX HTTP GET request)
+			$.getJSON("./index1.php?ProductControllerJSON/getProductById/" + id, function (data) {
+				//to be able to update you should first populate the form with the product's data based on the product id
+				showProductInForm(data);
+			});//end getjson  		
+		}
+
+		function getSaleProducts() {
+			//get JSON from php using AJAX
+			$.getJSON("./index1.php?ShoppingCartControllerJSON/showProductsForSale", function (data) {
+				//you got the data, now you need somewhere to store and show it
+				showProductsForSale(data);
+			}); 		    		
+		}
+
+		function getNumberOfProduct() {
+			$.getJSON("./index1.php?ShoppingCartControllerJSON/getNumberOfPro", function (data) {
+				//you got the data, now you need somewhere to store and show it
+				showNumberOfProduct(data);
+			}); 
+		}
+
+		function showProductsForSale(data) {
+			let table = $("#saleProduct");
+			table.empty();
+			table.append("<thead>" +
+			"<th>" + "Name" + "</th>" + 
+			"<th>" + "Category" + "</th>" + 
+			"<th>" + "Price" + "</th>" + 
+			"<th>" + "Buy it!" + "</th>" +
+			"</thead>"
+			);
+			table.append("<tbody id='myTable'>")
+			$.each(data, function (idx, product) {
+				table.append("<tr>" +
+				"<td>" + product.name + "</td>" +
+				"<td>" + product.category + "</td>" +
+				"<td>" + product.price + "<i class='fa fa-rmb'></i></td>" +
+				"<td><a href='#' onclick=addToCart('" + product.id + "')><i class='fa fa-cart-plus'></i></td>" +
+				"</tr>"
+				);
+			});
+		}
+
+		function showNumberOfProduct(data) {
+			let div = $("#numberOfProducts");
+			div.empty();
+			div.append("<span class='badge badge-primary'>Total Quantities: "+ data +"</span><br>");
+		}
+
+		function addToCart(id){
+			$.post("./index1.php?ShoppingCartControllerJSON/addToCart/" + id, function (data) {
+				//you got the data, now you need somewhere to store and show it
+				showNumberOfProduct(data);
+			}); 	
+		}
+
+		$(document).ready(function () {
+			getSaleProducts();
+			getNumberOfProduct();
+		});//end document ready
+
+	</script>
+</head>
+
+<body>
+
+<div class="container">
+	<div class="row">
+		<div class="col">
+			<h1>Products for sale</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col" id="numberOfProducts">
+		</div>
+		<div class="col">
+			<a href="./shoppingcart.html"><i class='fa fa-opencart'></i> Go to your shoppingcart</a><br>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col">
+		    <table class="table table-striped" id="saleProduct"></table>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col">
+        	<button class="btn btn-light btn-bg" style="margin-left:15px;"><a href="./welcomePage.html">Go back to Welcome Page</a></button>
+		</div>
+	</div>
+
+</div>
+</body>
+
+</html>

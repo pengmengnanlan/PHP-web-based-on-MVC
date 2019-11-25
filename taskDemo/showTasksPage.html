@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	
+	<script>
+		function getTaskById(id) {
+			//get JSON from php using AJAX request ($.getJSON() method is used to get JSON data using an AJAX HTTP GET request)
+			$.getJSON("./index1.php?TaskControllerJSON/getTaskById/" + id, function (data) {
+				showTaskInForm(data);
+			});//end getjson  		
+		}
+
+		function showTaskInForm(data) {
+			let myId = $("#txtId");
+			let myName = $("#txtName");
+			let myDescription = $("#txtDescription");
+			let myCategory = $("#txtCategory");
+			let is_done = $("#is_done");
+			let myTime = $("#txtTime");
+            let myGrade = $("#txtGrade");
+
+			myId.val(data.id);
+			myName.val(data.name);
+			myDescription.val(data.description);
+			myCategory.val(data.category);
+			is_done.val(data.is_done);
+			myTime.val(data.time);
+            myGrade.val(data.grade);
+
+			//show modal 
+			$('#myUpdateDeleteModal').modal('show');
+		}
+
+        function showTaskById(id) {
+			$.getJSON("./index1.php?TaskControllerJSON/getTaskById/" + id, function (data) {
+				showTaskInModal(data);
+			});
+		}
+
+		function showTaskInModal(data){
+			let card = $("#cardBody");
+			card.empty();
+			card.append("<h4>"+data.name+"</h4>"+
+			"<p>"+"Description: "+data.description+"</p>"+
+			"<p>"+"Category: "+data.category+"</p>");
+            if(data.is_done == "TRUE"){
+                card.append("<p>"+"Is Done? <br><span class='badge badge-success'>Done</span>"+"</p>");
+            }else{
+                card.append("<p>"+"Is Done? <br><span class='badge badge-danger'>Unfinished</span>"+"</p>");
+            }
+			$('#myTaskView').modal('show');
+		}
+
+		function getTasks() {
+			//get JSON from php using AJAX
+			$.getJSON("./index1.php?TaskControllerJSON/getTasks", function (data) {
+				//you got the data, now you need somewhere to store and show it
+                showTasksInTable(data);
+				$("#myInput").on("keyup",function(){
+					var inputValue = $(this).val().toLowerCase();
+					$("#myTable tr").filter(function(){
+						$(this).toggle($(this).text().toLowerCase().indexOf(inputValue) > -1);
+					});
+				});
+			}); 		    		
+		}
+
+		function updateTask() {
+			//assign values in modal text fields to variables
+			let myId = $("#myUpdateDeleteModal #txtId").val();//get value from textfield
+			let myName = $("#myUpdateDeleteModal #txtName").val();
+			let myDescription = $("#myUpdateDeleteModal #txtDescription").val();
+			let myCategory = $("#myUpdateDeleteModal #txtCategory").val();
+			let is_done = $("#myUpdateDeleteModal #is_done").val();
+			//send JSON to php using AJAX post request ($.post method loads data from server using an AJAX HTTP POST request)
+			let postData = { id: myId, name: myName, description: myDescription, category: myCategory, is_done: is_done};
+			$.post("./index1.php?TaskControllerJSON/updateTask", postData, function (data) {
+				alert(data);
+				getTasks();
+				getAllCategories();
+				$('#myUpdateDeleteModal').modal('hide');
+			});
+		}
+
+		function deleteTask() {
+			let myId = $("#myUpdateDeleteModal #txtId").val();//get value from textfield
+			alert(myId);
+			$.getJSON("./index1.php?TaskControllerJSON/deleteTaskById/" + myId, function (data) {
+				alert(data.response);
+				getTasks();
+				getAllCategories();
+				$('#myUpdateDeleteModal').modal('hide');
+			});
+
+		}
+
+		function addTask() {
+			//assign values in modal text fields to variables
+			let myName = $("#myAddModal #txtName").val();//get value from textfield
+			let myDescription = $("#myAddModal #txtDescription").val();
+			let myCategory = $("#myAddModal #txtCategory").val();
+			//send JSON to php using AJAX
+			let postData = { name: myName, description: myDescription, category: myCategory};
+			
+			$.post("./index1.php?TaskControllerJSON/addTask", postData, function (data) {
+				alert(data);
+				getTasks();
+				getAllCategories();
+				$("#myAddModal #txtName").val('');//empty fields
+				$("#myAddModal #txtCategory").val('');
+				$("#myAddModal #txtDescription").val('');
+				$("#myAddModal #txtTime").val('');
+				$("#myAddModal #txtGrade").val('');
+				$('#myAddModal').modal('hide');
+			});
+			window.location.reload();
+		}
+
+		function showTasksInTable(data) {
+			let table = $("#tblTask");
+			table.empty();
+			table.append("<thead>"+
+			"<th>" + "ID" + "</th>"+
+			"<th>" + "Name" + "</th>"+
+			"<th>" + "Category" + "</th>"+
+            "<th>" + "Is Done" + "</th>"+
+			"<th>"+"<input type='checkbox' class='form-check-input' id='selectAll' value='all' onclick='setSelection()'>Select All"+"</th>"+
+			"</thead>");
+			table.append("<tbody id='myTable'>")
+			$.each(data, function (idx, task) {
+                if(task.is_done == 'TRUE'){
+                    table.append("<tr style='background-color:#CD7054'>"+
+    				"<td><a href='#'  onclick=getTaskById('" + task.id + "')>" + task.id + "</a></td>"+
+	    			"<td><a href='#' onclick=showTaskById('" + task.id + "')>" + task.name + "</a></td>"+
+		    		"<td>" + task.category + "</td>"+
+			    	"<td>" + "<span class='badge badge-success'>"+task.is_done+"</span>" + "</td>"+
+				    "<td><div class='form-check'><label class='form-check-input'><input type='checkbox' class='form-check-input' name='myCheckBox' value='"+task.id+"'>"+task.description+"</label></div></td>"+
+				    "</tr>");
+                }else{
+                    table.append("<tr>"+
+    				"<td><a href='#'  onclick=getTaskById('" + task.id + "')>" + task.id + "</a></td>"+
+	    			"<td><a href='#' onclick=showTaskById('" + task.id + "')>" + task.name + "</a></td>"+
+		    		"<td>" + task.category + "</td>"+
+			    	"<td>" + "<span class='badge badge-danger'>"+task.is_done+"</span>" + "</td>"+
+				    "<td><div class='form-check'><label class='form-check-input'><input type='checkbox' class='form-check-input' name='myCheckBox' value='"+task.id+"'>"+task.description+"</label></div></td>"+
+				    "</tr>");
+                }
+            });
+			table.append("</tbody>");
+		}
+
+        function showTask(data) {
+            let table = $("#tblTask");
+			table.empty();
+			table.append("<thead>"+
+			"<th>" + "ID" + "</th>"+
+			"<th>" + "Name" + "</th>"+
+			"<th>" + "Category" + "</th>"+
+            "<th>" + "Is Done" + "</th>"+
+			"<th>"+"<input type='checkbox' class='form-check-input' id='selectAll' value='all' onclick='setSelection()'>Select All"+"</th>"+
+			"</thead>");
+			table.append("<tbody id='myTable'>")
+            $.each(data, function (idx, task) {
+                if(task.is_done == 'TRUE'){
+                    table.append("<tr>"+
+    				"<td><a href='#'  onclick=getTaskById('" + task.id + "')>" + task.id + "</a></td>"+
+	    			"<td><a href='#' onclick=showTaskById('" + task.id + "')>" + task.name + "</a></td>"+
+		    		"<td>" + task.category + "</td>"+
+			    	"<td>" + "<span class='badge badge-success'>"+task.is_done+"</span>" + "</td>"+
+				    "<td><div class='form-check'><label class='form-check-input'><input type='checkbox' class='form-check-input' name='myCheckBox' value='"+task.id+"'>"+task.description+"</label></div></td>"+
+				    "</tr>");
+                }else{
+                    table.append("<tr>"+
+    				"<td><a href='#'  onclick=getTaskById('" + task.id + "')>" + task.id + "</a></td>"+
+	    			"<td><a href='#' onclick=showTaskById('" + task.id + "')>" + task.name + "</a></td>"+
+		    		"<td>" + task.category + "</td>"+
+			    	"<td>" + "<span class='badge badge-danger'>"+task.is_done+"</span>" + "</td>"+
+				    "<td><div class='form-check'><label class='form-check-input'><input type='checkbox' class='form-check-input' name='myCheckBox' value='"+task.id+"'>"+task.description+"</label></div></td>"+
+				    "</tr>");
+                }
+            });
+            table.append("</tbody>");
+        }
+
+		function getAllCategories(){
+			$.getJSON("./index1.php?TaskControllerJSON/getAllCategories", function (data){
+				showCategoriesInSelect(data);
+			});
+		}
+
+		function showCategoriesInSelect(data){
+			let select = $("#category");
+			select.empty();
+			select.append("<option value='a'>-select-</option>");
+			$.each(data, function (idx, category){
+				select.append("<option value='"+ category.category +"'>"+ category.category +"</option>");
+			});
+			select.append("<option value='all'>-All Tasks-</option>");
+		}
+
+		function showTasksByCategory(){
+			let category = $("#category").val();
+			if(category=='all'){
+				getTasks();
+			}else{
+				$.getJSON("./index1.php?TaskControllerJSON/getTasksByCategory/"+category, function (data){
+					showTasksInTable(data);
+				});
+			}
+		}
+
+		function finishMultiple(){
+			var checkedVal = $('input[type=checkbox]:checked').map(function(_,el){
+				return $(el).val();
+			}).get();
+			for(var i=0;i<checkedVal.length;i++){
+				$.getJSON("./index1.php?TaskControllerJSON/finishTaskById/" + checkedVal[i], function (data) {
+                getTasks();
+				getAllCategories();
+				});
+			}
+		}
+
+        function refreshMultiple() {
+            var checkedVal = $('input[type=checkbox]:checked').map(function(_,el){
+				return $(el).val();
+			}).get();
+			for(var i=0;i<checkedVal.length;i++){
+				$.getJSON("./index1.php?TaskControllerJSON/refreshTaskById/" + checkedVal[i], function (data) {
+				getTasks();
+				getAllCategories();
+				});
+			}
+        }
+
+		function selectAll(){
+			var all = document.getElementsByName("myCheckBox");
+			for(var i=0;i<all.length;i++){
+				all[i].checked=true;
+			}
+		}
+
+		function selectNone(){
+			var all = document.getElementsByName("myCheckBox");
+			for(var i=0;i<all.length;i++){
+				all[i].checked=false;
+			}
+		}
+
+		function setSelection(){
+			// var check = $("#selectAll");
+			var check = document.getElementById("selectAll");
+			if(check.checked==true){
+				selectAll();
+			}else{
+				selectNone();
+			}
+		}
+
+        function checkFinishedTasks() {
+            $.getJSON("./index1.php?TaskControllerJSON/getFinishedTask", function (data){
+                showTask(data);
+            });
+        }
+
+        function checkUnfinishedTasks() {
+            $.getJSON("./index1.php?TaskControllerJSON/getUnfinishedTask", function (data){
+                showTask(data);
+            });
+        }
+
+		$(document).ready(function () {
+			$(function(){
+				$("#btAdd").on("click",function(e){
+					var form = $(addForm)[0];
+					var isValid = form.checkValidity();
+					if(!isValid){
+						e.preventDefault();
+						e.stopPropagation();
+					}else if(isValid){
+						addTask();
+					}
+					form.classList.add('was-validated');
+					return false;
+				});
+			});
+			getTasks();
+			getAllCategories();
+		});//end document ready
+	</script>
+</head>
+
+<body style="width:100%; height: 100%; margin:0; padding:0; background-color:#E0EEEE">
+
+	<div class="container">
+		<div class="row" style="margin-top: 15px;">
+			<h3 class="text-info">Welcome to your to-do List :)</h3>
+		</div>
+		<div class="row">
+			<h3>Manage Your Tasks</h3>
+		</div>
+		<div class="row" style="margin-top: 25px;">
+			<div style="float:left; padding-right:610px;">
+				<input class="form-control" id="myInput" type="text" placeholder="filter a task">
+			</div>
+    		<div style="float:left; padding-right:15px;">
+				<select id='category' class="form-control">
+				</select>
+			</div>
+        	<div style="float:left">
+				<button onclick="showTasksByCategory()" class="btn btn-secondary"> Search By Category</button>
+			</div>
+		</div>
+		<div class="row" style="margin-top: 25px;">
+			<div class="col">
+				<table class="table table-striped" id="tblTask"></table>
+			</div>
+		</div>
+		<div class="row" style="margin-top: 15px;">
+			<div class="col">
+				<button class="btn btn-info" type="button" data-toggle="modal" data-target="#myAddModal">Add Task</button>
+			</div>
+			<div class="col" style="margin-left: 25px;">
+				<button class="btn btn-danger" type="button" id="btFinish" onclick="finishMultiple()">Finish Tasks</button>
+			</div>
+            <div class="col" style="margin-left: 25px;">
+				<button class="btn btn-primary" type="button" id="btRefresh" onclick="refreshMultiple()">Refresh Tasks</button>
+			</div>
+            <div class="col" style="margin-left: 25px;">
+				<button class="btn btn-warning" type="button" id="btCheck" onclick="checkFinishedTasks()">Finished Task</button>
+			</div>
+            <div class="col" style="margin-left: 25px;">
+				<button class="btn btn-secondary" type="button" id="btCheck" onclick="checkUnfinishedTasks()">Unfinished Task</button>
+			</div>
+            <div class="col" style="margin-left: 25px;">
+				<button class="btn btn-light" type="button" id="btCheck" onclick="getTasks()">Show all Tasks</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- The Modal for update delete -->
+	<div class="modal" id="myUpdateDeleteModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Edit Task</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+
+				<!-- Modal body -->
+				<div class="modal-body">
+					Id:<input type="text" id="txtId" class="form-control" readonly="true">
+					Name:<input type="text" id="txtName" class="form-control">
+					Category:<input type="text" id="txtCategory" class="form-control">
+					Description:<textarea id="txtDescription" class="form-control"></textarea>
+					Is_done:<input type="text" id="is_done" class="form-control">
+				</div>
+
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					<div class="btn-group">
+						<button onclick="updateTask()" class="btn btn-primary">Update</button>
+						<button onclick="deleteTask()" class="btn btn-danger">Delete</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--end modal-->
+	<!-- The Modal for add -->
+	<div class="modal" id="myAddModal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Add a new task to your list</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+				<!-- Modal body -->
+				<div class="modal-body">
+					<form id="addForm" class="needs-validated" novalidate>
+					<div class="form-group">
+						<label for="txtName">Name:</label>
+						<input type="text" id="txtName" class="form-control" required>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please fill out this field</div>
+					</div>
+					<div class="form-group">
+						<label for="txtCategory">Category:</label>
+						<input type="text" id="txtCategory" class="form-control" required>
+						<div class="valid-feedback">Valid.</div>
+						<div class="invalid-feedback">Please fill out this field</div>
+					</div>
+					<div class="form-group">
+						<label for="txtDescription">Description:</label>
+						<textarea id="txtDescription" class="form-control"></textarea>
+						<div class="valid-feedback">Can be empty.</div>
+					</div>
+					</form>
+				</div>
+
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					<div class="btn-group">
+						<button id="btAdd" type="submit" class="btn btn-success">Add</button>
+						<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+				
+
+			</div>
+		</div>
+	</div>
+	<!--end modal-->
+
+    <div class="modal" id="myTaskView">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Task Info</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+
+				<div class="modal-body">
+					<div class="container">
+						<div class='card' style='width:20rem;'>
+            				<div class='card-body' id="cardBody">
+            				</div>
+        				</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>

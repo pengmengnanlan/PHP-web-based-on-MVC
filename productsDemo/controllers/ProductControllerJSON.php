@@ -8,14 +8,13 @@ class ProductControllerJSON{
     }
     public function getProducts(){
         //encode as json data.
-        echo json_encode($this->model->getProducts());
-        
-       
+        echo json_encode($this->model->getProducts()); 
     }
+
     public function getProductById($id){
         echo json_encode($this->model->getProductById($id));
-        
     }    
+
     public function updateProduct(){       
         
         //create stdClass and set it's properties
@@ -24,7 +23,7 @@ class ProductControllerJSON{
         $product->name=$_POST['name'];
         $product->description=$_POST['description'];
         $product->category=$_POST['category'];
-        $product->image=$_POST['image'];
+        $product->img=$_POST['image'];
         $product->price=$_POST['price'];
 
         $this->model->updateProduct($product);
@@ -36,12 +35,12 @@ class ProductControllerJSON{
         
         $product=new stdClass();
         //create stdClass and set it's properties
-        $product=new stdClass();
+        // $product=new stdClass();
         /*$product->id=$_POST['id'];*/
         $product->name=$_POST['name'];
         $product->description=$_POST['description'];
         $product->category=$_POST['category'];
-        $product->image=$_POST['image'];
+        $product->img=$_POST['image'];
         $product->price=$_POST['price'];
 
         $this->model->addProduct($product);
@@ -52,7 +51,6 @@ class ProductControllerJSON{
     public function deleteProductById($id){
         $this->model->deleteProductById($id);	
         echo json_encode(array("response"=>"Deleted product ".$id));
-
     }
 
     public function getAllCategories(){

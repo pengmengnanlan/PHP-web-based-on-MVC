@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Bootstrap Practice</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="bootstrap.min.css">
+    <script src="jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+	<script src="bootstrap.min.js"></script>
+	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	<script>
+		function getProductsInCart() {
+			//get JSON from php using AJAX
+			$.getJSON("./index1.php?ShoppingCartControllerJSON/showCart", function (data) {
+				//you got the data, now you need somewhere to store and show it
+				showProductsInCart(data);
+			}); 		    		
+		}
+
+        function getTotalToPay() {
+            $.getJSON("./index1.php?ShoppingCartControllerJSON/getTotalToPay", function (data) {
+				//you got the data, now you need somewhere to store and show it
+				showTotalToPay(data);
+			}); 
+        }
+
+        function showTotalToPay(data) {
+            let table = $("#totalToPay");
+            table.empty();
+            table.append("<tbody>")
+            table.append("<tr><td colspan=6 style='background-color:green; color:white'>Total To Pay : "+data+"</td></tr>");
+        }
+
+		function showProductsInCart(data) {
+			let table = $("#shoppingcart");
+			table.empty();
+			table.append("<thead>" +
+			"<th>" + "Name" + "</th>" + 
+			"<th>" + "Quantity" + "</th>" + 
+            "<th>" + "Price" + "</th>" + 
+			"<th>" + "Sum" + "</th>" + 
+			"<th>" + "Remove" + "</th>" +
+            "<th>" + "Add" + "</th>" +
+			"</thead>"
+			);
+			table.append("<tbody id='myTable'>")
+			$.each(data, function (idx, product) {
+				table.append("<tr>" +
+				"<td>" + product.name + "</td>" +
+				"<td>" + product.qty + "</td>" +
+				"<td>" + product.price + "<i class='fa fa-rmb'></i></td>" +
+                "<td>" + product.price*product.qty + "<i class='fa fa-rmb'></i></td>" +
+				"<td><a href='#' onclick=remove('" + product.id + "')><i class='fa fa-minus'></i></td>" +
+                "<td><a href='#' onclick=add('" + product.id + "')><i class='fa fa-plus'></i></td>" +
+				"</tr>"
+				);
+			});
+		}
+
+		function add(id) {
+			$.post("./index1.php?ShoppingCartControllerJSON/add/" + id, function (data) {
+				//you got the data, now you need somewhere to store and show it
+				getProductsInCart();
+                getTotalToPay();
+			}); 	
+		}
+
+        function remove(id) {
+            $.post("./index1.php?ShoppingCartControllerJSON/remove/" + id, function (data) {
+				//you got the data, now you need somewhere to store and show it
+				getProductsInCart();
+                getTotalToPay();
+			}); 	
+        }
+
+        function emptyCart() {
+            $.post("./index1.php?ShoppingCartControllerJSON/emptyCart", function (data) {
+				//you got the data, now you need somewhere to store and show it
+				getProductsInCart(data);
+                getTotalToPay(data);
+			}); 
+        }
+
+		$(document).ready(function () {
+			getProductsInCart();
+            getTotalToPay();
+		});//end document ready
+
+	</script>
+</head>
+
+<body>
+
+<div class="container">
+	<div class="row">
+		<div class="col">
+			<h2>Welcome to your shoppingcart</h2>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col">
+			<a href='#' onclick='emptyCart()'>Empty cart<i class="fa fa-trash"></i></a><br>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col">
+		    <table class="table table-striped" id="shoppingcart"></table>
+		</div>
+	</div>
+    <div class="row">
+        <div class="col">
+		    <table class="table table-striped" id="totalToPay"></table>
+		</div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <a href="./productsInSale.html">Show products for shopping <i class='fa fa-cart-plus'></i>
+        </div>
+    </div>
+    
+    
+
+    
+</div>
+</body>
+
+</html>

@@ -9,6 +9,8 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
   	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	
 	<script>
 		function getProductById(id) {
 			//get JSON from php using AJAX request ($.getJSON() method is used to get JSON data using an AJAX HTTP GET request)
@@ -16,6 +18,23 @@
 				//to be able to update you should first populate the form with the product's data based on the product id
 				showProductInForm(data);
 			});//end getjson  		
+		}
+
+		function showProductById(id) {
+			$.getJSON("./index1.php?ProductControllerJSON/getProductById/" + id, function (data) {
+				showProductInModal(data);
+			});
+		}
+
+		function showProductInModal(data){
+			let card = $("#cardBody");
+			card.empty();
+			card.append("<h4>"+data.name+"</h4>"+
+			"<img class='card-img-top img-fluid' src='"+ data.img +"'>"+
+			"<p>"+"Description: "+data.description+"</p>"+
+			"<p>"+"Category: "+data.category+"</p>"+
+			"<p>"+"Price: "+data.price + "</p>");
+			$('#myProductView').modal('show');
 		}
 
 		function showProductInForm(data) {
@@ -44,6 +63,12 @@
 			$.getJSON("./index1.php?ProductControllerJSON/getProducts", function (data) {
 				//you got the data, now you need somewhere to store and show it
 				showProductsInTable(data);
+				$("#myInput").on("keyup",function(){
+					var inputValue = $(this).val().toLowerCase();
+					$("#myTable tr").filter(function(){
+						$(this).toggle($(this).text().toLowerCase().indexOf(inputValue) > -1);
+					});
+				});
 			}); 		    		
 		}
 
@@ -98,28 +123,32 @@
 				$("#myAddModal #txtPrice").val('');
 				$('#myAddModal').modal('hide');
 			});
+			// window.location.reload();
 		}//end update car
 
 		function showProductsInTable(data) {
 			let table = $("#tblProduct");
 			table.empty();
-			table.append("<thead>");
-			table.append("<th>" + "ID" + "</th>");
-			table.append("<th>" + "Name" + "</th>");
-			table.append("<th>" + "Category" + "</th>");
-			table.append("<th>" + "Description" + "</th>");
-			table.append("<th>" + "Price" + "</th>");
-			table.append("</thead>");
+			table.append("<thead>"+
+			"<th>" + "ID" + "</th>"+
+			"<th>" + "Name" + "</th>"+
+			"<th>" + "Category" + "</th>"+
+			"<th>" + "Description" + "</th>"+
+			"<th>" + "Price" + "</th>"+
+			"<th>"+"<input type='checkbox' class='form-check-input' id='selectAll' value='all' onclick='setSelection()'>Select All"+"</th>"+
+			"</thead>");
+			table.append("<tbody id='myTable'>")
 			$.each(data, function (idx, product) {
-
-				table.append("<tr>");
-				table.append("<td><a href='#'  onclick=getProductById('" + product.id + "')>" + product.id + "</a></td>");
-				table.append("<td>" + product.name + "</td>");
-				table.append("<td>" + product.category + "</td>");
-				table.append("<td>" + product.description + "</td>");
-				table.append("<td>" + product.price + "</td>");
-				table.append("</tr>");
+				table.append("<tr>"+
+				"<td><a href='#'  onclick=getProductById('" + product.id + "')>" + product.id + "</a></td>"+
+				"<td><a href='#' onclick=showProductById('" + product.id + "')>" + product.name + "</a></td>"+
+				"<td>" + product.category + "</td>"+
+				"<td>" + product.description + "</td>"+
+				"<td>" + product.price + "</td>"+
+				"<td><div class='form-check'><label class='form-check-input'><input type='checkbox' class='form-check-input' name='myCheckBox' value='"+product.id+"'>Delete Product "+product.id+"</label></div></td>"+
+				"</tr>");
 			});//end each
+			table.append("</tbody>");
 		}
 
 		function getAllCategories(){
@@ -130,6 +159,7 @@
 
 		function showCategoriesInSelect(data){
 			let select = $("#category");
+			select.empty();
 			select.append("<option value='a'>-select-</option>");
 			$.each(data, function (idx, category){
 				select.append("<option value='"+ category.category +"'>"+ category.category +"</option>");
@@ -148,11 +178,61 @@
 			}
 		}
 
+		function deleteMultiple(){
+			var checkedVal = $('input[type=checkbox]:checked').map(function(_,el){
+				return $(el).val();
+			}).get();
+			for(var i=0;i<checkedVal.length;i++){
+				$.getJSON("./index1.php?ProductControllerJSON/deleteProductById/" + checkedVal[i], function (data) {
+				getProducts();
+				getAllCategories();
+				});
+			}
+		}
+
+		function selectAll(){
+			var all = document.getElementsByName("myCheckBox");
+			for(var i=0;i<all.length;i++){
+				all[i].checked=true;
+			}
+		}
+
+		function selectNone(){
+			var all = document.getElementsByName("myCheckBox");
+			for(var i=0;i<all.length;i++){
+				all[i].checked=false;
+			}
+		}
+
+		function setSelection(){
+			// var check = $("#selectAll");
+			var check = document.getElementById("selectAll");
+			if(check.checked==true){
+				selectAll();
+			}else{
+				selectNone();
+			}
+		}
+
 		$(document).ready(function () {
+			$(function(){
+				$("#btAdd").on("click",function(e){
+					var form = $(addForm)[0];
+					var isValid = form.checkValidity();
+					if(!isValid){
+						e.preventDefault();
+						e.stopPropagation();
+					}else if(isValid){
+						addProduct();
+					}
+					form.classList.add('was-validated');
+					return false;
+				});
+			});
+			
 			getProducts();
 			getAllCategories();
 		});//end document ready
-
 	</script>
 </head>
 
@@ -166,29 +246,37 @@
 			<div class="col-sm-10">
 				<h3>Manage Your Products</h3>
 			</div>
-			<div class="col-sm-2">
-				<button class="btn btn-info" type="button" data-toggle="modal" data-target="#myAddModal">Add
-					Product</button>
+		</div>
+		<div class="row" style="margin-top: 25px;">
+			<div style="float:left; padding-right:650px;">
+				<input class="form-control" id="myInput" type="text" placeholder="filter a product">
 			</div>
-		</div>
-		<div class="row"style="margin-top: 25px;">
-    	<div style="float:left; padding-right:15px;">
-			<select id='category' class="form-control">
-			</select>
-		</div>
-        <div style="float:left">
-			<button onclick="showProductsByCategory()" class="btn btn-secondary"> Search</button>
-		</div>
+    		<div style="float:left; padding-right:15px;">
+				<select id='category' class="form-control">
+				</select>
+			</div>
+        	<div style="float:left">
+				<button onclick="showProductsByCategory()" class="btn btn-secondary"> Search</button>
+			</div>
 		</div>
 		<div class="row" style="margin-top: 25px;">
 			<div class="col">
-				<table class="table table-hover" id="tblProduct"></table>
+				<table class="table table-striped" id="tblProduct"></table>
 			</div>
 		</div>
-		<div class="col">
-            <button class="btn btn-light btn-bg" style="margin-left:920px"><a href="./menu.html">Go to the store</a></button>
+		<div class="row" style="margin-top: 25px;">
+			<div class="col">
+				<button class="btn btn-info" type="button" data-toggle="modal" data-target="#myAddModal">Add Product</button>
+			</div>
+			<div class="col">
+				<button class="btn btn-danger" type="button" id="btDelete" onclick="deleteMultiple()">Delete Multiple Product</button>
+			</div>
+			<div class="col">
+            	<button class="btn btn-light btn-bg" style="margin-left:15px;"><a href="./welcomePage.html">Go back to Welcome Page</a></button>
+			</div>
 		</div>
 	</div>
+
 	<!-- The Modal for update delete -->
 	<div class="modal" id="myUpdateDeleteModal">
 		<div class="modal-dialog">
@@ -233,69 +321,74 @@
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
 				</div>
 				<!-- Modal body -->
-				<form action='' method="POST" class="needs-validated" novalidate>
 				<div class="modal-body">
+					<form id="addForm" class="needs-validated" novalidate>
 					<div class="form-group">
-						Name:<input type="text" id="txtName" class="form-control" required>
+						<label for="txtName">Name:</label>
+						<input type="text" id="txtName" class="form-control" required>
 						<div class="valid-feedback">Valid.</div>
 						<div class="invalid-feedback">Please fill out this field</div>
 					</div>
 					<div class="form-group">
-						Category:<input type="text" id="txtCategory" class="form-control" required>
+						<label for="txtCategory">Category:</label>
+						<input type="text" id="txtCategory" class="form-control" required>
 						<div class="valid-feedback">Valid.</div>
 						<div class="invalid-feedback">Please fill out this field</div>
 					</div>
 					<div class="form-group">
-						Description:<textarea id="txtDescription" class="form-control" required></textarea>
-						<div class="valid-feedback">Valid.</div>
-						<div class="invalid-feedback">Please fill out this field</div>
+						<label for="txtDescription">Description:</label>
+						<textarea id="txtDescription" class="form-control"></textarea>
+						<div class="valid-feedback">Can be empty.</div>
 					</div>
 					<div class="form-group">
-						Image:<input type="text" id="txtImage" class="form-control" required>
-						<div class="valid-feedback">Valid.</div>
-						<div class="invalid-feedback">Please fill out this field</div>
+						<label for="txtImage">Image:</label>
+						<input type="text" id="txtImage" class="form-control">
+						<div class="valid-feedback">Can be empty.</div>
 					</div>
 					<div class="form-group">
-						Price:<input type="number" id="txtPrice" class="form-control" required>
+						<label for="txtPrice">Price:</label>
+						<input type="float" id="txtPrice" class="form-control" required>
 						<div class="valid-feedback">Valid.</div>
 						<div class="invalid-feedback">Please enter the numbers</div>
 					</div>
+					</form>
 				</div>
 
 				<!-- Modal footer -->
 				<div class="modal-footer">
 					<div class="btn-group">
-						<button id="btAdd" type="submit" class="btn btn-success" onclick="addProduct()">Add</button>
+						<button id="btAdd" type="submit" class="btn btn-success">Add</button>
 						<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
 					</div>
 				</div>
-				</form>
+				
 
 			</div>
 		</div>
 	</div>
 	<!--end modal-->
-	
-	<script>
-	// Disable form submissions if there are invalid fields
-	(function() {
-	  'use strict';
-	  window.addEventListener('load', function() {
-    	// Get the forms we want to add validation styles to
-    	var forms = document.getElementsByClassName('needs-validation');
-    	// Loop over them and prevent submission
-    	var validation = Array.prototype.filter.call(forms, function(form) {
-      	form.addEventListener('submit', function(event) {
-        if (form.checkValidity() === false) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      }, false);
-    });
-  }, false);
-})();
-</script>
+
+	<div class="modal" id="myProductView">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Product Info</h4>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+
+				<div class="modal-body">
+					<div class="container">
+						<div class='card' style='width:20rem;'>
+            				<img class='card-img-top img-fluid' id='cardImg'>
+            				<div class='card-body' id="cardBody">
+            				</div>
+        				</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 
 </html>

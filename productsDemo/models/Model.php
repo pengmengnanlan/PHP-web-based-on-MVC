@@ -14,6 +14,7 @@ class Model{
             $product = new Product();
             $product->id=$prod->id;
             $product->name=$prod->name;
+            $product->category=$prod->category;
             $product->price=$prod->price;
             $product->qty=0;
             $productsArray[]=$product;   
@@ -28,6 +29,7 @@ class Model{
         $product = new Product();
         $product->id=$prodDB->id;
         $product->name=$prodDB->name;
+        $product->category=$prodDB->category;
         $product->price=$prodDB->price;
         $product->qty=0;
         return $product;
