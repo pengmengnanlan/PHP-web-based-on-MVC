@@ -1,2 +1,7 @@
-# PHP web based on MVC
- A demo of a PHP web based on MVC
+# A web Demo
+* back-end：PHP
+* front-end: JS, AJAX
+* MVC
+* Bootstrap
+* Database: SQLite
+
